@@ -1,52 +1,62 @@
-// src/index.js
-
 class Room {
-  constructor(name, rate, discount) {
-    this.name = name;
-    this.rate = rate;
-    this.discount = discount;
-    this.bookings = bookings;
+  constructor(object) {
+    this.name = object.name;
+    this.rate = object.rate;
+    this.discount = object.discount;
+    this.bookings = object.bookings || [];
   }
-  isOccupied(date) {
-    // Este método debe verificar si la habitación está ocupada en una fecha específica
-    // Debería devolver true si está ocupada, false si no lo está
 
+  isOccupied(date) {
     return this.bookings.some(
-      (booking) => date >= booking.checkIn && date <= booking.checkOut
+      (booking) => date >= booking.checkIn && date < booking.checkOut
     );
   }
 
   occupancyPercentage(startDate, endDate) {
-    // Este método debería calcular el porcentaje de ocupación de la habitación
-    // entre dos fechas dadas (startDate y endDate)
+    const totalDays = (endDate - startDate) / (1000 * 60 * 60 * 24); // Convertir a días
+    let occupiedDays = 0;
+
+    this.bookings.forEach((booking) => {
+      const bookingStart =
+        booking.checkIn < startDate ? startDate : booking.checkIn;
+      const bookingEnd =
+        booking.checkOut > endDate ? endDate : booking.checkOut;
+
+      if (bookingStart < endDate && bookingEnd > startDate) {
+        occupiedDays += (bookingEnd - bookingStart) / (1000 * 60 * 60 * 24); // Convertir a días
+      }
+    });
+
+    if (totalDays === 0) return 0;
+    return (occupiedDays / totalDays) * 100;
   }
 
   static totalOccupancyPercentage(rooms, startDate, endDate) {
-    // Este método estático debería calcular el porcentaje total de ocupación
-    // de todas las habitaciones en un array dado de habitaciones
-    // dentro del rango de fechas especificado (startDate y endDate)
+    const totalPercentages = rooms.reduce(
+      (acc, room) => acc + room.occupancyPercentage(startDate, endDate),
+      0
+    );
+    return totalPercentages / rooms.length;
   }
 
   static availableRooms(rooms, startDate, endDate) {
-    // Este método estático debería devolver un array de habitaciones disponibles
-    // (no ocupadas) durante todo el período especificado (startDate a endDate)
+    return rooms.filter(
+      (room) => !room.isOccupied(startDate) && !room.isOccupied(endDate)
+    );
   }
 }
 
 class Booking {
-  constructor(name, email, checkIn, checkOut, discount, room) {
-    this.name = name;
-    this.email = email;
-    this.checkIn = checkIn;
-    this.checkOut = checkOut;
-    this.discount = discount;
-    this.room = room;
+  constructor(object) {
+    this.name = object.name;
+    this.email = object.email;
+    this.checkIn = object.checkIn;
+    this.checkOut = object.checkOut;
+    this.discount = object.discount;
+    this.room = object.room;
   }
 
-  get fee() {
-    // Este método getter debería calcular la tarifa total de la reserva
-    // teniendo en cuenta los descuentos aplicados tanto en la habitación como en la reserva
-  }
+  get fee() {}
 }
 
 module.exports = { Room, Booking };
